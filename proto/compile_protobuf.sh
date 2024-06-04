@@ -1,0 +1,1 @@
+protoc -I=proto/ --python_out=./agent/proto --cpp_out=./src/client/proto/ proto/*.proto

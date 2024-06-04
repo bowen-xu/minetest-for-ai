@@ -20,6 +20,16 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 
 #include "agent_inputhandler.h"
 
+
+bool AgentEventReceiver::OnEvent(const SEvent &event)
+{
+	if (this->input_blocked)
+		return false;
+
+    return this->MyEventReceiver::OnEvent(event);
+		
+}
+
 void AgentInputHandler::step(float dtime) {
     v2u32 screenDims = RenderingEngine::getWindowSize();
 

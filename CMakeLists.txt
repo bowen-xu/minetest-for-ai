@@ -274,6 +274,26 @@ endif()
 find_package(GMP REQUIRED)
 find_package(Json REQUIRED)
 find_package(Lua REQUIRED)
+
+find_package(Protobuf REQUIRED)
+find_package(ZeroMQ REQUIRED)
+find_package(Zmqpp REQUIRED)
+
+find_package(absl REQUIRED)
+# find_package(Abseil REQUIRED)
+# link_libraries(
+# 	absl::log_internal_message
+# 	absl::log_internal_check_op
+# )
+# message("=====!!!!absl_DIR: ${absl_DIR}")
+# message("=====!!!!Abseil_INCLUDE_DIRS: ${Abseil_INCLUDE_DIRS}")
+# message("=====!!!!Abseil_LIBRARIES: ${Abseil_LIBRARIES}")
+# # TODO: refactor this
+set(CMAKE_INSTALL_RPATH "/opt/homebrew/Cellar/abseil/20240116.2/lib;${CMAKE_INSTALL_RPATH}")
+# set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
+# set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+# message(CMAKE_INSTALL_LIBDIR: ${CMAKE_INSTALL_LIBDIR})
+
 if(NOT USE_LUAJIT)
 	add_subdirectory(lib/bitop)
 endif()

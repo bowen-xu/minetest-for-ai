@@ -80,6 +80,11 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "clientdynamicinfo.h"
 #include <IAnimatedMeshSceneNode.h>
 
+#include "agent/agent_inputhandler.h"
+#include "agent/recorder.h"
+
+#include <zmqpp/zmqpp.hpp>
+
 #if USE_SOUND
 	#include "client/sound/sound_openal.h"
 #endif
@@ -968,6 +973,21 @@ private:
 #endif
 
 	float m_shutdown_progress = 0.0f;
+
+private:
+	// ZMQ objects
+	zmqpp::context context;
+	zmqpp::socket* data_socket = nullptr;
+
+	// custom dtime
+	f32 custom_dtime = 0;
+
+
+	// Recorder creation
+	Recorder *recorder = nullptr;
+	void createRecorder(const GameStartData &start_data) { 
+		this->recorder = new Recorder(); 
+	}
 };
 
 Game::Game() :
@@ -1027,6 +1047,16 @@ Game::~Game()
 	delete client;
 	delete soundmaker;
 	sound_manager.reset();
+
+	if(recorder)
+		delete recorder;
+
+	if(this->data_socket) {
+		// TODO this line might cause a segfault
+		// but Idk why
+		this->data_socket->close();
+		delete this->data_socket;
+	}
 
 	delete server;
 
@@ -1132,7 +1162,47 @@ bool Game::startup(bool *kill,
 	if (!createClient(start_data))
 		return false;
 
-	m_rendering_engine->initialize(client, hud);
+	// Initialize ZMQ objects
+	std::cout << "is agent enabled: " << start_data.enable_agent << ", " <<start_data.isAgentEnabled() << std::endl;
+	std::cout << "agent_address:" << start_data.agent_address << std::endl;
+	if (start_data.isAgentEnabled())
+	{
+		zmqpp::socket_type socket_type;
+		socket_type = zmqpp::socket_type::request;
+		data_socket = new zmqpp::socket(context, socket_type);
+		std::string address = start_data.agent_address;
+		warningstream << "Try to connect to agent address: " << address << std::endl;
+		try {
+			data_socket->connect(address);
+		} catch (zmqpp::zmq_internal_exception &e) {
+			errorstream << "ZeroMQ error: " << e.what() << " (address: " << address << ")\n";
+			throw e;
+		};
+		std::cout << "connected:" << start_data.agent_address << std::endl;
+
+		// pass socket to the agent handler
+		std::cout << "Setting handler socket... input=" << (void*)input << std::endl;
+		try{
+			dynamic_cast<AgentInputHandler*>(input)->socket = data_socket;
+		}
+		catch (std::exception &e) {
+			std::cerr << e.what() << std::endl;
+			throw e;
+		}
+		std::cout << "Handler set." << std::endl;
+
+		// pass socket to the recorder
+		std::cout << "Creating recorder... " << std::endl;
+		createRecorder(start_data);
+		std::cout << "Recorder created: " << (void*) this->recorder << std::endl;
+		recorder->sender = data_socket;
+		std::cout << "recorder created:" << (void*)this->recorder << std::endl;
+		
+		// set custom dtime
+		custom_dtime = start_data.custom_dtime;
+	}
+
+	m_rendering_engine->initialize(client, hud, start_data.isHeadless());
 
 	return true;
 }
@@ -1166,9 +1236,37 @@ void Game::run()
 		);
 	const bool initial_window_maximized = g_settings->getBool("window_maximized");
 
+	bool firstIter = true;
 	while (m_rendering_engine->run()
 			&& !(*kill || g_gamecallback->shutdown_requested
 			|| (server && server->isShutdownRequested()))) {
+		
+		float reward;
+		bool terminal;
+		std::string info;
+
+		if (custom_dtime > 0.f)
+			dtime = custom_dtime;
+		info = "info from client!"; //client->getInfo();
+		reward = 0.0; //client->getReward();
+		terminal = false; //client->getTerminal();
+
+
+		// send data out
+		// std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+		std::cout << "Sending observation:" << "recorder=" << (void*)this->recorder << "; firstIter=" << firstIter << std::endl;
+		if(this->recorder && !firstIter) {
+			// pb_objects::Image pb_img = client->getPixelData(input->getMousePos(), isMenuActive(), cursorImage);
+			pb_objects::Image pb_img = client->getPixelData(input->getMousePos(), isMenuActive(), nullptr);
+
+			recorder->setInfo(info);
+			recorder->setImage(pb_img);
+			recorder->setReward(reward);
+			recorder->setTerminal(terminal);
+			recorder->sendObservation();
+		}
+		// std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+
 
 		// Calculate dtime =
 		//    m_rendering_engine->run() from this iteration
@@ -1203,7 +1301,21 @@ void Game::run()
 		m_game_ui->clearInfoText();
 
 		updateProfilers(stats, draw_times, dtime);
-		processUserInput(dtime);
+		
+		//skip if there is a recorder and it's the first iteration -- Why??
+		if (!recorder || !firstIter)
+		{
+			processUserInput(dtime);
+		}
+
+		// record action
+		if(recorder && !firstIter) 
+		{
+			auto _input = dynamic_cast<AgentInputHandler*>(input);
+			pb_objects::Action lastAction = _input->getLastAction();
+			recorder->setAction(lastAction);
+		}
+
 		// Update camera before player movement to avoid camera lag of one frame
 		updateCameraDirection(&cam_view_target, dtime);
 		cam_view.camera_yaw += (cam_view_target.camera_yaw -
@@ -1229,6 +1341,8 @@ void Game::run()
 		if (m_does_lost_focus_pause_game && !device->isWindowFocused() && !isMenuActive()) {
 			showPauseMenu();
 		}
+
+		firstIter = false;
 	}
 
 	RenderingEngine::autosaveScreensizeAndCo(initial_screen_size, initial_window_maximized);

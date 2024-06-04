@@ -137,16 +137,6 @@ public:
 	// Check things that should be set by the builtin mod.
 	void checkSetByBuiltin();
 
-protected:
-	friend class LuaABM;
-	friend class LuaLBM;
-	friend class InvRef;
-	friend class ObjectRef;
-	friend class NodeMetaRef;
-	friend class ModApiBase;
-	friend class ModApiEnv;
-	friend class LuaVoxelManip;
-	friend class TestMoveAction; // needs getStack()
 
 	/*
 		Subtle edge case with coroutines: If for whatever reason you have a
@@ -159,6 +149,17 @@ protected:
 	*/
 	lua_State* getStack()
 		{ return m_luastack; }
+
+protected:
+	friend class LuaABM;
+	friend class LuaLBM;
+	friend class InvRef;
+	friend class ObjectRef;
+	friend class NodeMetaRef;
+	friend class ModApiBase;
+	friend class ModApiEnv;
+	friend class LuaVoxelManip;
+	friend class TestMoveAction; // needs getStack()
 
 	// Checks that stack size is sane
 	void realityCheck();

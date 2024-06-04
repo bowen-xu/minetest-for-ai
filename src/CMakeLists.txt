@@ -591,6 +591,26 @@ if(BUILD_CLIENT)
 		# on other platforms, only IrrlichtMt depends on SDL2
 		"$<$<PLATFORM_ID:Android>:${SDL2_LIBRARIES}>"
 	)
+
+	target_include_directories(
+		${PROJECT_NAME} PRIVATE
+		${Protobuf_INCLUDE_DIRS}
+		${ZeroMQ_INCLUDE_DIRS}
+		${Zmqpp_INCLUDE_DIRS}
+	)
+	target_link_libraries(
+		${PROJECT_NAME}
+		${Protobuf_LIBRARIES}
+		${ZeroMQ_LIBRARIES}
+		${Zmqpp_LIBRARIES}
+	)
+
+	target_link_libraries(
+		${PROJECT_NAME}
+		absl::log_internal_message
+		absl::log_internal_check_op
+	)
+
 	if(NOT USE_LUAJIT)
 		set_target_properties(${PROJECT_NAME} PROPERTIES
 			# This is necessary for dynamic Lua modules

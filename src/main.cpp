@@ -376,6 +376,14 @@ static void set_allowed_options(OptionList *allowed_options)
 			_("Feature an interactive terminal (Only works when using minetestserver or with --server)"))));
 	allowed_options->insert(std::make_pair("recompress", ValueSpec(VALUETYPE_FLAG,
 			_("Recompress the blocks of the given map database."))));
+
+	allowed_options->insert(std::make_pair("agent-address", ValueSpec(VALUETYPE_STRING,
+			_("ZeroMQ address to the agent/Python gym environment."))));
+	allowed_options->insert(std::make_pair("headless", ValueSpec(VALUETYPE_FLAG,
+			_("Start client in headless mode."))));
+	allowed_options->insert(std::make_pair("enable-agent", ValueSpec(VALUETYPE_FLAG,
+			_("Enable this client to interact with an agent (Not for servers)"))));
+
 #ifndef SERVER
 	allowed_options->insert(std::make_pair("address", ValueSpec(VALUETYPE_STRING,
 			_("Address to connect to. ('' = local game)"))));

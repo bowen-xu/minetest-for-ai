@@ -404,8 +404,9 @@ std::vector<video::E_DRIVER_TYPE> RenderingEngine::getSupportedVideoDrivers()
 	return drivers;
 }
 
-void RenderingEngine::initialize(Client *client, Hud *hud)
+void RenderingEngine::initialize(Client *client, Hud *hud, bool headless)
 {
+	this->headless = headless;
 	const std::string &draw_mode = g_settings->get("3d_mode");
 	core.reset(createRenderingCore(draw_mode, m_device, client, hud));
 }
@@ -477,4 +478,9 @@ void RenderingEngine::autosaveScreensizeAndCo(
 			->isWindowMaximized();
 	if (is_window_maximized != initial_window_maximized)
 		g_settings->setBool("window_maximized", is_window_maximized);
+}
+
+
+irr::video::IImage *RenderingEngine::get_screenshot() {
+	return core->get_screenshot();
 }

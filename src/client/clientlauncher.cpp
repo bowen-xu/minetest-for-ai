@@ -38,6 +38,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <ICameraSceneNode.h>
 #include <unordered_map>
 
+#include "agent/agent_inputhandler.h"
+
 #if USE_SOUND
 	#include "sound/sound_openal.h"
 #endif
@@ -289,11 +291,27 @@ void ClientLauncher::init_args(GameStartData &start_data, const Settings &cmd_ar
 
 	random_input = g_settings->getBool("random_input")
 			|| cmd_args.getFlag("random-input");
+
+	// Agent related
+	if(cmd_args.exists("agent-address"))
+		start_data.agent_address = cmd_args.get("agent-address");
+
+	start_data.headless = cmd_args.getFlag("headless");
+	start_data.custom_dtime = cmd_args.exists("dtime") ? cmd_args.getFloat("dtime") : 0.f;
+
+	start_data.enable_agent = cmd_args.getFlag("enable-agent");
+
+	enable_agent = start_data.isAgentEnabled();
+	agent_address = start_data.agent_address;
 }
 
 bool ClientLauncher::init_engine()
 {
-	receiver = new MyEventReceiver();
+	if (enable_agent)
+		receiver = new AgentEventReceiver();
+	else
+		receiver = new MyEventReceiver();
+
 	try {
 		m_rendering_engine = new RenderingEngine(receiver);
 	} catch (std::exception &e) {
@@ -304,7 +322,12 @@ bool ClientLauncher::init_engine()
 
 void ClientLauncher::init_input()
 {
-	if (random_input)
+	if (enable_agent)
+	{
+		input = new AgentInputHandler(static_cast<AgentEventReceiver*>(receiver));
+		// std::cout << "AgentInputHandler initialized. input=" << (void*)input << std::endl;
+	}
+	else if (random_input)
 		input = new RandomInputHandler();
 	else
 		input = new RealInputHandler(receiver);

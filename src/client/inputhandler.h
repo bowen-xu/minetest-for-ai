@@ -199,7 +199,7 @@ public:
 
 	JoystickController *joystick = nullptr;
 
-private:
+public:
 	s32 mouse_wheel = 0;
 
 	// The current state of keys
@@ -234,6 +234,11 @@ public:
 	virtual ~InputHandler() = default;
 
 	virtual bool isRandom() const
+	{
+		return false;
+	}
+
+	virtual bool isAgentEnabled() const
 	{
 		return false;
 	}

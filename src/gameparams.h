@@ -55,4 +55,15 @@ struct GameStartData : GameParams
 
 	// "world_path" must be kept in sync!
 	WorldSpec world_spec;
+
+	// agent related
+	std::string agent_address;
+	bool headless = false;
+	f32 custom_dtime;
+	bool enable_agent = false;
+
+	bool isAgentEnabled() const { return enable_agent && !agent_address.empty(); }
+	bool isHeadless() const { return headless; }
+
+
 };

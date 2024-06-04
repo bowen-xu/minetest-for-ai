@@ -146,7 +146,7 @@ public:
 	void draw_scene(video::SColor skycolor, bool show_hud,
 			bool draw_wield_tool, bool draw_crosshair);
 
-	void initialize(Client *client, Hud *hud);
+	void initialize(Client *client, Hud *hud, bool headless);
 	void finalize();
 
 	bool run()
@@ -167,6 +167,8 @@ public:
 			const irr::core::dimension2d<u32> initial_screen_size,
 			const bool initial_window_maximized);
 
+	bool headless = false;
+	irr::video::IImage *get_screenshot();
 private:
 	v2u32 _getWindowSize() const;
 

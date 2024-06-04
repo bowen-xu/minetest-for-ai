@@ -22,6 +22,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "plain.h"
 #include "client/shadows/dynamicshadowsrender.h"
 #include "settings.h"
+#include "client/renderingengine.h"
+#include "client/client.h"
 
 RenderingCore::RenderingCore(IrrlichtDevice *_device, Client *_client, Hud *_hud,
 		ShadowRenderer *_shadow_renderer, RenderPipeline *_pipeline, v2f _virtual_size_scale)
@@ -47,11 +49,47 @@ void RenderingCore::draw(video::SColor _skycolor, bool _show_hud,
 	context.draw_wield_tool = _draw_wield_tool;
 	context.show_hud = _show_hud;
 
-	pipeline->reset(context);
-	pipeline->run(context);
+	if(client->getRenderingEngine()->headless) {
+		auto tex = new TextureBufferOutput(m_buffer, 0);
+		pipeline->setRenderTarget(tex);
+		pipeline->reset(context);
+		pipeline->run(context);
+
+		auto t = tex->buffer->getTexture(0);
+		auto raw_image = device->getVideoDriver()->createImageFromData(
+			t->getColorFormat(),
+			screensize,
+			t->lock(irr::video::E_TEXTURE_LOCK_MODE::ETLM_READ_ONLY),
+			false  //copy mem
+			);
+		if(screenshot)
+			screenshot->drop();
+		screenshot =
+				device->getVideoDriver()->createImage(video::ECF_R8G8B8,
+				screensize
+				);
+		raw_image->copyTo(screenshot);
+		t->unlock();
+
+		raw_image->drop();
+		delete tex;
+	} 
+	else 
+	{
+		pipeline->reset(context);
+		pipeline->run(context);
+	}
 }
 
 v2u32 RenderingCore::getVirtualSize() const
 {
 	return virtual_size;
+}
+
+
+video::IImage *RenderingCore::get_screenshot() {
+	if(!screenshot) return nullptr;
+	auto copyScreenshot = device->getVideoDriver()->createImage(video::ECF_R8G8B8, screenshot->getDimension());
+	screenshot->copyTo(copyScreenshot);
+	return copyScreenshot;
 }

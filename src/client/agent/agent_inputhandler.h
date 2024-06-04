@@ -27,6 +27,18 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include <zmqpp/zmqpp.hpp>
 #include <string>
 
+class AgentEventReceiver : public MyEventReceiver
+{
+public:
+	AgentEventReceiver()=default;
+	~AgentEventReceiver()=default;
+
+	// This is the one method that we have to implement
+	virtual bool OnEvent(const SEvent &event);
+
+	bool input_blocked = false;
+};
+
 class AgentInputHandler : public InputHandler
 {
 public:
@@ -41,9 +53,9 @@ public:
 		{pb_objects::PLACE, "KEY_RBUTTON"},
 	};
 
-	AgentInputHandler(MyEventReceiver *receiver) : m_receiver(receiver){};
+	AgentInputHandler(AgentEventReceiver *receiver) : m_receiver(receiver){};
 
-	bool isDumb() const
+	virtual bool isAgentEnabled() const
 	{
 		return true;
 	}
@@ -53,6 +65,8 @@ public:
 		pb_objects::Action action;
 		action.set_mousedx(mousespeed[0]);
 		action.set_mousedy(mousespeed[1]);
+		
+		/* traverse all keys */
 		for (int i = pb_objects::KeyType::FORWARD; i != pb_objects::INTERNAL_ENUM_COUNT; ++i)
 		{
 			pb_objects::KeyboardEvent *ev = action.add_keyevents();
@@ -176,7 +190,7 @@ public:
 
 private:
 	// Event receiver to simulate events
-	MyEventReceiver *m_receiver = nullptr;
+	AgentEventReceiver *m_receiver = nullptr;
 
 	// Whether a GUI (inventory/menu) was open
 	bool wasGuiOpen = false;

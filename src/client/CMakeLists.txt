@@ -23,6 +23,10 @@ if(USE_SOUND)
 		PARENT_SCOPE)
 endif()
 
+
+file(GLOB PROTO_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/proto/*.cc")
+file(GLOB AGENT_SRCS "${CMAKE_CURRENT_SOURCE_DIR}/agent/*.cpp")
+
 set(client_SRCS
 	${sound_SRCS}
 	${CMAKE_CURRENT_SOURCE_DIR}/meshgen/collector.cpp
@@ -75,5 +79,9 @@ set(client_SRCS
 	${CMAKE_CURRENT_SOURCE_DIR}/shadows/dynamicshadowsrender.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/shadows/shadowsshadercallbacks.cpp
 	${CMAKE_CURRENT_SOURCE_DIR}/shadows/shadowsScreenQuad.cpp
+
+	${PROTO_SRCS}
+	${AGENT_SRCS}
+
 	PARENT_SCOPE
 )

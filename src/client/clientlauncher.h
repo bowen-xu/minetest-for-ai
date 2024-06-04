@@ -52,4 +52,9 @@ private:
 	RenderingEngine *m_rendering_engine = nullptr;
 	InputHandler *input = nullptr;
 	MyEventReceiver *receiver = nullptr;
+
+private:
+	bool enable_agent = false;
+	std::string agent_address = "";
+
 };

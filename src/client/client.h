@@ -38,6 +38,8 @@ with this program; if not, write to the Free Software Foundation, Inc.,
 #include "clientdynamicinfo.h"
 #include "util/numeric.h"
 
+#include "client/proto/objects.pb.h"
+
 #ifdef SERVER
 #error Do not include in server builds
 #endif
@@ -448,6 +450,11 @@ public:
 
 	bool inhibit_inventory_revert = false;
 
+	float getReward();
+	std::string getInfo();
+	bool getTerminal();
+	pb_objects::Image getPixelData(core::position2di cursorPosition, bool isMenuActive, irr::video::IImage* cursorImage);
+	RenderingEngine* getRenderingEngine();
 private:
 	void loadMods();
 

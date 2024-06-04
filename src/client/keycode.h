@@ -52,14 +52,14 @@ public:
 	const char *sym() const;
 	const char *name() const;
 
+	irr::EKEY_CODE Key = irr::KEY_KEY_CODES_COUNT;
+	wchar_t Char = L'\0';
 protected:
 	static bool valid_kcode(irr::EKEY_CODE k)
 	{
 		return k > 0 && k < irr::KEY_KEY_CODES_COUNT;
 	}
 
-	irr::EKEY_CODE Key = irr::KEY_KEY_CODES_COUNT;
-	wchar_t Char = L'\0';
 	std::string m_name = "";
 };
 
