@@ -1,3 +1,9 @@
+WORK IN PROGRESS
+========
+This GitHub repository is a customized version of Minetest, specifically designed for interacting with AI agents.
+
+The following is the orignal document, though it might not be applied to this repo. A new document is needed.
+
 Minetest
 ========
 
